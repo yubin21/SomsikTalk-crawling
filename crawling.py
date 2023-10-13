@@ -1,0 +1,79 @@
+from flask import Blueprint, jsonify
+from bs4 import BeautifulSoup
+import json
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+
+bp = Blueprint("crawling", __name__)
+
+options = Options()
+options.add_argument("--headless")  # 브라우저 창을 띄우지 않도록 headless 모드로 설정
+
+driver = webdriver.Chrome(options=options)
+
+
+def get_today_menu(li_element):
+    menu_info = []
+
+    dl_elements = li_element.find_all("dl")
+
+    for dl in dl_elements:
+        dd_elements = dl.find_all("dd", class_="ddCafeTeriaInfo")
+
+        # dd 태그에서 정보를 가져와서 줄바꿈 문자로 분할
+        for dd in dd_elements:
+            text = dd.get_text(strip=False)
+            text = text.replace("\n\n", "-")
+            items = text.split("-")
+
+            if items:
+                for i in range(len(items)):
+                    menu_name = items[i].strip()  # 메뉴 이름
+
+                    # Null 값인 경우 무시
+                    if not menu_name:
+                        continue
+
+                    # 결과 리스트에 추가
+                    menu_info.append(menu_name)
+
+    return menu_info
+
+
+# 일주일 동안의 식단 정보를 가져오는 함수
+def get_weekly_menus(soup):
+    weekly_menus = {}
+    ul_element = soup.select_one("ul#ulWeekDtInfo")  # ul 태그 선택
+
+    if ul_element:
+        li_elements = ul_element.find_all("li")  # 모든 li 태그 선택
+
+        for li_element in li_elements:
+            # 날짜 정보 가져오기
+            span = li_element.select_one("p span").get_text(strip=True)
+            day = li_element.select_one("p b").get_text(strip=True)
+            date_info = f"{span} {day}"  # 날짜 정보 형식 수정
+            menus = get_today_menu(li_element)
+            weekly_menus[date_info] = menus
+            print(date_info)  # 날짜 정보 출력
+            print(menus)  # 메뉴 정보 출력
+
+    return weekly_menus
+
+
+# 해당 URL의 HTML을 BeautifulSoup 객체로 반환하는 함수
+def get_html(url: str) -> BeautifulSoup:
+    driver.get(url)
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    return soup
+
+
+@bp.route("/crawling")
+def crawling():
+    website_url = "https://www.dongduk.ac.kr/kor/life/cafeteria.do"
+
+    soup = get_html(website_url)
+    weekly_menus = get_weekly_menus(soup)
+
+    return json.dumps(weekly_menus, ensure_ascii=False, indent=4)
