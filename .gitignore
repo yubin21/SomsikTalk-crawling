@@ -1,0 +1,12 @@
+HELP.md
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+### VS Code ###
+.vscode/
+
+.DS_Store
