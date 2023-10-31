@@ -1,16 +1,66 @@
 from flask import Blueprint, jsonify
 from bs4 import BeautifulSoup
 import json
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 
 bp = Blueprint("crawling", __name__)
 
-options = Options()
-options.add_argument("--headless")  # 브라우저 창을 띄우지 않도록 headless 모드로 설정
+# service = Service(executable_path="/usr/bin/chromedriver-linux64/ chromedriver")
 
-driver = webdriver.Chrome(options=options)
+chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--single-process")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
+driver = webdriver.Chrome()
+
+# driver = webdriver.Chrome(service=service, options=chrome_options)
+
+url = "https://www.google.com"
+driver.get(url)
+
+# case 0 - DevToolsActivePort file doesn't exist 로 실패
+# driver = webdriver.Chrome()
+# case 1 - 실패 path 지정하라고 뜸.
+# driver = webdriver.Chrome("./chromedriver", chrome_options=chrome_options)
+# case 2 - DevToolsActivePort file doesn't exist 로 실패
+# driver = webdriver.Chrome(
+#     executable_path="/usr/bin/chromedriver", chrome_options=chrome_options
+# )
+# case 3 -  (unknown error: DevToolsActivePort file doesn't exist) (The process started from chrome location /usr/bin/chromium is no longer running, so ChromeDriver is assuming that Chrome has crashed.)
+# driver = webdriver.Chrome(chrome_options=chrome_options)
+
+# options = Options()
+# options.binary_location = (
+#     "/usr/bin/google-chrome"  # Chrome binary location specified here
+# )
+
+
+# chrome_options = webdriver.ChromeOptions()
+# chrome_options.add_argument("--headless")
+# chrome_options.add_argument("--no-sandbox")
+# # chrome_options.add_argument("--single-process")
+# chrome_options.add_argument("--disable-dev-shm-usage")
+# chrome_options.add_argument("--remote-debugging-port=9222")  # 포트 변경?
+
+
+# path = "/usr/bin/chromedriver"
+# # driver = webdriver.Chrome(path, chrome_options=chrome_options)
+
+
+# driver = webdriver.Chrome(
+#     chrome_options=chrome_options,
+# )
+
+# service = Service(executable_path="./chromedriver.exe")
+
+
+# url = "https://www.google.com"
+# driver.get(url)
 
 
 def get_today_menu(li_element):
